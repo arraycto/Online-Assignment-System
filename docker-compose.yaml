@@ -1,0 +1,17 @@
+version: '3.3'
+services:
+  database:
+    image: mysql:5.6.49
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'graduation'   
+      MYSQL_USER: 'graduation'
+      MYSQL_PASSWORD: 'xSRB6wFH2ycfkJce'      
+      MYSQL_ROOT_PASSWORD: '7169c3adfa92eba3'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - './.mysql-data/db:/var/lib/mysql'

@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="graduationproject.back.mapper.UserMapper">
+  <resultMap id="BaseResultMap" type="graduationproject.back.model.entity.User">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="pwd" jdbcType="VARCHAR" property="pwd" />
+    <result column="student_id" jdbcType="VARCHAR" property="studentId" />
+    <result column="account_type" jdbcType="INTEGER" property="accountType" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, name, pwd, user_id, account_type, create_time
+  </sql>
+
+  <!--  注册账户-->
+  <insert id="userRegistration" parameterType="User">
+    insert into user (id, name, pwd, user_id, create_time,account_type)
+    values (
+    #{id,jdbcType=INTEGER},
+    #{name,jdbcType=VARCHAR},
+    #{pwd,jdbcType=VARCHAR},
+    #{userId,jdbcType=VARCHAR},
+    #{createTime,jdbcType=TIMESTAMP},
+    #{accountType,jdbcType=VARCHAR})
+  </insert>
+  <!--账户登录-->
+  <select id="userLogin" resultType="graduationproject.back.model.vo.UserLoginVo">
+    SELECT
+	u.*,
+	us.account_disabled
+FROM
+	`user` u
+	LEFT JOIN user_status us ON u.user_id = us.user_id  where
+    u.user_id = #{userId,jdbcType=VARCHAR} and
+    u.pwd = #{pwd,jdbcType=VARCHAR} and
+    u.account_type = #{accountType,jdbcType=VARCHAR}
+  </select>
+
+<!--  查看密码是否正确-->
+  <select id="findUserByIdAndPwd" resultType="User">
+
+    select * from user where
+    user_id = #{userId,jdbcType=VARCHAR} and
+    pwd = #{pwd,jdbcType=VARCHAR}
+
+  </select>
+
+<!--  改密码-->
+  <update id="changePwd" parameterType="User">
+    update user
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        pwd = #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="accountType != null">
+        account_type = #{accountType,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where user_id = #{userId,jdbcType=VARCHAR}
+  </update>
+
+
+  <insert id="addUserByExcelBatchImport" parameterType="User">
+    insert into user (id, name, pwd, user_id, create_time,account_type)
+    values (
+    #{id,jdbcType=INTEGER},
+    #{name,jdbcType=VARCHAR},
+    #{pwd,jdbcType=VARCHAR},
+    #{userId,jdbcType=VARCHAR},
+    #{createTime,jdbcType=TIMESTAMP},
+    #{accountType,jdbcType=VARCHAR})
+  </insert>
+
+  <select id="selectByUserId" resultType="User">
+   select * from user where
+    user_id = #{userId,jdbcType=VARCHAR}
+  </select>
+
+  <delete id="deleteUser">
+DELETE elective,
+files,
+`comment`,
+user_status
+FROM
+	elective
+	LEFT JOIN files ON elective.user_id = files.author_id
+	LEFT JOIN `comment` ON `comment`.course_id = elective.course_id
+	AND `comment`.user_id = elective.user_id
+	LEFT JOIN user_status ON user_status.user_id = `comment`.user_id
+WHERE
+	elective.course_id = #{courseId,jdbcType=INTEGER}
+	AND elective.user_id = #{userId,jdbcType=VARCHAR}
+	AND files.course_id = #{courseId,jdbcType=INTEGER}
+	AND files.author_id = #{userId,jdbcType=VARCHAR}
+	AND `comment`.course_id = #{courseId,jdbcType=INTEGER}
+	AND `comment`.user_id = #{userId,jdbcType=VARCHAR}
+	AND `user_status`.user_id = #{userId,jdbcType=VARCHAR}
+  </delete>
+
+  <select id="getAllStudentList" resultType="graduationproject.back.model.vo.GetAllStudentList">
+    SELECT
+	u.user_id,
+	u.name,
+	u.account_type,
+	u.create_time,
+	us.account_disabled
+FROM
+	`user` u
+	LEFT JOIN user_status us ON u.user_id = us.user_id
+	WHERE u.account_type='0'
+ORDER BY
+	u.user_id
+  </select>
+
+  <select id="getAllTeacherList" resultType="graduationproject.back.model.vo.GetAllStudentList">
+    SELECT
+	u.user_id,
+	u.name,
+	u.account_type,
+	u.create_time,
+	us.account_disabled
+FROM
+	`user` u
+	LEFT JOIN user_status us ON u.user_id = us.user_id
+	WHERE u.account_type='1'
+ORDER BY
+	u.user_id
+  </select>
+
+  <delete id="adminDeleteUser">
+DELETE
+`user`,user_status,assignment,`comment`,course, elective,files
+FROM
+	`user`
+	LEFT JOIN user_status ON user_status.user_id = `user`.user_id
+	LEFT JOIN assignment ON assignment.author_id = `user`.user_id
+	LEFT JOIN `comment` ON `comment`.author_id = `user`.user_id
+	LEFT JOIN course ON course.author_id = `user`.user_id
+	LEFT JOIN elective ON elective.user_id = `user`.user_id
+	LEFT JOIN files ON files.author_id = `user`.user_id
+WHERE
+	`user`.user_id = #{userId,jdbcType=VARCHAR}
+  </delete>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from user
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="graduationproject.back.model.entity.User">
+    insert into user (id, name, pwd, 
+      student_id, account_type, create_time
+      )
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, 
+      #{studentId,jdbcType=VARCHAR}, #{accountType,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="graduationproject.back.model.entity.User">
+    insert into user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="pwd != null">
+        pwd,
+      </if>
+      <if test="studentId != null">
+        student_id,
+      </if>
+      <if test="accountType != null">
+        account_type,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="studentId != null">
+        #{studentId,jdbcType=VARCHAR},
+      </if>
+      <if test="accountType != null">
+        #{accountType,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="graduationproject.back.model.entity.User">
+    update user
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        pwd = #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="studentId != null">
+        student_id = #{studentId,jdbcType=VARCHAR},
+      </if>
+      <if test="accountType != null">
+        account_type = #{accountType,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="graduationproject.back.model.entity.User">
+    update user
+    set name = #{name,jdbcType=VARCHAR},
+      pwd = #{pwd,jdbcType=VARCHAR},
+      student_id = #{studentId,jdbcType=VARCHAR},
+      account_type = #{accountType,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

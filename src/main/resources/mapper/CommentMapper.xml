@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="graduationproject.back.mapper.CommentMapper">
+  <resultMap id="BaseResultMap" type="graduationproject.back.model.entity.Comment">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="assignment_id" jdbcType="INTEGER" property="assignmentId" />
+    <result column="course_id" jdbcType="INTEGER" property="courseId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="author_id" jdbcType="VARCHAR" property="authorId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="content" jdbcType="VARCHAR" property="content" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, assignment_id, course_id, user_name, user_id, author_id, create_time, content
+  </sql>
+
+  <insert id="commentAssignment" parameterType="graduationproject.back.model.entity.Comment">
+    insert into comment (id, assignment_id, course_id,
+      user_name, user_id, author_id,
+      create_time, content,score)
+    values (#{id,jdbcType=INTEGER}, #{assignmentId,jdbcType=INTEGER}, #{courseId,jdbcType=INTEGER},
+      #{userName,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{authorId,jdbcType=VARCHAR},
+      #{createTime,jdbcType=TIMESTAMP}, #{content,jdbcType=VARCHAR}, #{score,jdbcType=VARCHAR}) ON DUPLICATE KEY UPDATE
+      content =#{content,jdbcType=VARCHAR} ,score =#{score,jdbcType=VARCHAR}
+  </insert>
+
+
+
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from comment
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from comment
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insertSelective" parameterType="graduationproject.back.model.entity.Comment">
+    insert into comment
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="assignmentId != null">
+        assignment_id,
+      </if>
+      <if test="courseId != null">
+        course_id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="authorId != null">
+        author_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="assignmentId != null">
+        #{assignmentId,jdbcType=INTEGER},
+      </if>
+      <if test="courseId != null">
+        #{courseId,jdbcType=INTEGER},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null">
+        #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="graduationproject.back.model.entity.Comment">
+    update comment
+    <set>
+      <if test="assignmentId != null">
+        assignment_id = #{assignmentId,jdbcType=INTEGER},
+      </if>
+      <if test="courseId != null">
+        course_id = #{courseId,jdbcType=INTEGER},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null">
+        author_id = #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        content = #{content,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="graduationproject.back.model.entity.Comment">
+    update comment
+    set assignment_id = #{assignmentId,jdbcType=INTEGER},
+      course_id = #{courseId,jdbcType=INTEGER},
+      user_name = #{userName,jdbcType=VARCHAR},
+      user_id = #{userId,jdbcType=VARCHAR},
+      author_id = #{authorId,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      content = #{content,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="graduationproject.back.mapper.ElectiveMapper">
+  <resultMap id="BaseResultMap" type="graduationproject.back.model.entity.Elective">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="course_id" jdbcType="INTEGER" property="courseId" />
+    <result column="course_name" jdbcType="VARCHAR" property="courseName" />
+    <result column="join_time" jdbcType="TIMESTAMP" property="joinTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, user_id, user_name, course_id, course_name, join_time
+  </sql>
+
+  <insert id="joinCourse" parameterType="graduationproject.back.model.entity.Elective">
+    INSERT INTO elective ( user_id, user_name, course_id, course_name, join_time )
+SELECT
+    u.user_id,
+    u.`name`,
+    c.course_id,
+    c.course_name,
+    now()
+    FROM
+        `course` c
+        INNER JOIN `user` u
+    WHERE
+       course_id = #{courseId,jdbcType=INTEGER} and user_id = #{userId,jdbcType=VARCHAR}
+  </insert>
+
+  <select id="selectByUserIdAndCourseId" resultType="Elective">
+
+    select * from elective where
+    course_id = #{courseId,jdbcType=INTEGER} and user_id = #{userId,jdbcType=VARCHAR}
+  </select>
+
+  <insert id="addElectiveByExcelBatchImport" parameterType="graduationproject.back.model.entity.Elective">
+    INSERT INTO elective ( user_id, user_name, course_id, course_name, join_time )
+    SELECT
+    u.user_id,
+    u.`name`,
+    c.course_id,
+    c.course_name,
+    now()
+    FROM
+        `course` c
+        INNER JOIN `user` u
+    WHERE
+       course_id = #{courseId,jdbcType=INTEGER} and user_id = #{userId,jdbcType=VARCHAR}
+  </insert>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from elective
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from elective
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="graduationproject.back.model.entity.Elective">
+    insert into elective (id, user_id, user_name, 
+      course_id, course_name, join_time
+      )
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=VARCHAR}, #{userName,jdbcType=VARCHAR}, 
+      #{courseId,jdbcType=INTEGER}, #{courseName,jdbcType=VARCHAR}, #{joinTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="graduationproject.back.model.entity.Elective">
+    insert into elective
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="courseId != null">
+        course_id,
+      </if>
+      <if test="courseName != null">
+        course_name,
+      </if>
+      <if test="joinTime != null">
+        join_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="courseId != null">
+        #{courseId,jdbcType=INTEGER},
+      </if>
+      <if test="courseName != null">
+        #{courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="joinTime != null">
+        #{joinTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="graduationproject.back.model.entity.Elective">
+    update elective
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="courseId != null">
+        course_id = #{courseId,jdbcType=INTEGER},
+      </if>
+      <if test="courseName != null">
+        course_name = #{courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="joinTime != null">
+        join_time = #{joinTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="graduationproject.back.model.entity.Elective">
+    update elective
+    set user_id = #{userId,jdbcType=VARCHAR},
+      user_name = #{userName,jdbcType=VARCHAR},
+      course_id = #{courseId,jdbcType=INTEGER},
+      course_name = #{courseName,jdbcType=VARCHAR},
+      join_time = #{joinTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

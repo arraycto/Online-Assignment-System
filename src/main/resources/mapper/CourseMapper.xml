@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="graduationproject.back.mapper.CourseMapper">
+  <resultMap id="BaseResultMap" type="graduationproject.back.model.entity.Course">
+    <id column="course_id" jdbcType="INTEGER" property="courseId" />
+    <result column="course_name" jdbcType="VARCHAR" property="courseName" />
+    <result column="author_id" jdbcType="VARCHAR" property="authorId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="graduationproject.back.model.entity.Course">
+    <result column="course_desc" jdbcType="LONGVARCHAR" property="courseDesc" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    course_id, course_name, author_id, create_time
+  </sql>
+  <sql id="Blob_Column_List">
+    course_desc
+  </sql>
+
+
+  <insert id="createCourse" parameterType="Course">
+    insert into course (course_name, author_id, create_time, course_desc)
+    values (
+    #{courseName,jdbcType=VARCHAR},
+    #{authorId,jdbcType=VARCHAR},
+    #{createTime,jdbcType=TIMESTAMP},
+    #{courseDesc,jdbcType=LONGVARCHAR})
+  </insert>
+
+  <update id="modifyCourse" parameterType="Course">
+    update course
+    <set>
+      <if test="courseName != null">
+        course_name = #{courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="courseDesc != null">
+        course_desc = #{courseDesc,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where course_id = #{courseId,jdbcType=INTEGER} and author_id = #{authorId,jdbcType=VARCHAR}
+  </update>
+
+  <delete id="deleteCourse">
+    DELETE course,
+    elective
+    FROM
+        course
+        LEFT JOIN elective ON course.course_id = elective.course_id
+    WHERE
+        course.course_id = #{courseId,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteStudentOnCourse">
+DELETE elective,
+files,
+`comment`
+FROM
+	elective
+	LEFT JOIN files ON elective.user_id = files.author_id LEFT JOIN assignment ON assignment.course_id = elective.course_id AND assignment.assignment_id = files.assignment_id
+	LEFT JOIN `comment` ON `comment`.course_id = elective.course_id
+	AND `comment`.user_id = elective.user_id
+WHERE
+	elective.course_id = #{courseId,jdbcType=INTEGER}
+
+	AND elective.user_id = #{userId,jdbcType=VARCHAR}
+  </delete>
+
+
+  <select id="getAllCourse" resultType="graduationproject.back.model.vo.CourseVo">
+   SELECT
+    c.course_id,
+	u.`name`,
+	c.course_name,
+	c.course_desc,
+	( CASE IFNULL( e.course_id, 0 ) WHEN 0 THEN '0' ELSE '1' END ) join_status
+FROM
+	( course c LEFT JOIN elective e ON e.course_id = c.course_id AND e.user_id = #{userId,jdbcType=VARCHAR} )
+	INNER JOIN `user` u ON c.author_id = u.user_id
+GROUP BY
+	c.course_id,
+	c.author_id
+ORDER BY
+	u.create_time
+  </select>
+
+  <select id="selectByCourseId" resultType="Course">
+    select * from course where course_id = #{courseId,jdbcType=INTEGER}
+  </select>
+
+  <select id="getAllStudentInfo" resultType="graduationproject.back.model.vo.CourseStudentInfoVo">
+    SELECT
+		e.course_id , e.user_name name ,e.user_id ,e.join_time
+	FROM
+	`elective` e INNER JOIN `user` u
+	ON e.user_id = u.user_id and e.course_id = #{courseId,jdbcType=INTEGER}
+  </select>
+
+  <select id="teacherGetAllCourse" resultType="Course">
+
+    select * from course where author_id = #{userId,jdbcType=VARCHAR}
+  </select>
+
+  <select id="adminGetAllCourse" resultType="graduationproject.back.model.vo.AdminGetAllCourseVo">
+    select course.*,user.name from course LEFT JOIN `user` ON user.user_id = course.author_id
+  </select>
+
+  <select id="getTeacherList" resultType="graduationproject.back.model.vo.AdminGetTeacherList">
+    SELECT NAME
+	,
+	user_id author_id
+FROM
+	`user`
+WHERE
+	account_type = '1'
+  </select>
+
+  <select id="getAllMyCourse" resultType="graduationproject.back.model.vo.GetAllMyCourseVo">
+      SELECT
+    c.course_id,
+	u.`name`,
+	c.course_name,
+	c.course_desc,
+	( CASE IFNULL( e.course_id, 0 ) WHEN 0 THEN '0' ELSE '1' END ) join_status,
+	e.join_time
+FROM
+	( course c LEFT JOIN elective e ON e.course_id = c.course_id AND e.user_id = #{userId,jdbcType=VARCHAR} )
+	INNER JOIN `user` u ON c.author_id = u.user_id
+WHERE e.course_id != 0
+GROUP BY
+	c.course_id,
+	c.author_id
+ORDER BY
+	u.create_time
+  </select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from course
+    where course_id = #{courseId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from course
+    where course_id = #{courseId,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="graduationproject.back.model.entity.Course">
+    insert into course (course_id, course_name, author_id, 
+      create_time, course_desc)
+    values (#{courseId,jdbcType=INTEGER}, #{courseName,jdbcType=VARCHAR}, #{authorId,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{courseDesc,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="graduationproject.back.model.entity.Course">
+    insert into course
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="courseId != null">
+        course_id,
+      </if>
+      <if test="courseName != null">
+        course_name,
+      </if>
+      <if test="authorId != null">
+        author_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="courseDesc != null">
+        course_desc,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="courseId != null">
+        #{courseId,jdbcType=INTEGER},
+      </if>
+      <if test="courseName != null">
+        #{courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null">
+        #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="courseDesc != null">
+        #{courseDesc,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="graduationproject.back.model.entity.Course">
+    update course
+    <set>
+      <if test="courseName != null">
+        course_name = #{courseName,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null">
+        author_id = #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="courseDesc != null">
+        course_desc = #{courseDesc,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where course_id = #{courseId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="graduationproject.back.model.entity.Course">
+    update course
+    set course_name = #{courseName,jdbcType=VARCHAR},
+      author_id = #{authorId,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      course_desc = #{courseDesc,jdbcType=LONGVARCHAR}
+    where course_id = #{courseId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="graduationproject.back.model.entity.Course">
+    update course
+    set course_name = #{courseName,jdbcType=VARCHAR},
+      author_id = #{authorId,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where course_id = #{courseId,jdbcType=INTEGER}
+  </update>
+</mapper>

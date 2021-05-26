@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="graduationproject.back.mapper.FilesMapper">
+  <resultMap id="BaseResultMap" type="graduationproject.back.model.entity.Files">
+    <id column="file_id" jdbcType="INTEGER" property="fileId" />
+    <result column="file_name" jdbcType="VARCHAR" property="fileName" />
+    <result column="author_id" jdbcType="VARCHAR" property="authorId" />
+    <result column="file_path" jdbcType="VARCHAR" property="filePath" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    file_id, file_name, author_id, file_path, create_time
+  </sql>
+
+  <insert id="saveUploadFile" parameterType="graduationproject.back.model.entity.Files">
+    insert IGNORE into files (file_name, author_id, file_path, create_time,course_id,assignment_id)
+    values (
+    #{fileName,jdbcType=VARCHAR},
+    #{authorId,jdbcType=VARCHAR},
+    #{filePath,jdbcType=VARCHAR},
+    #{createTime,jdbcType=TIMESTAMP},
+    #{courseId,jdbcType=INTEGER},
+    #{assignmentId,jdbcType=INTEGER})
+  </insert>
+
+  <select id="stuGetUploadFileByUserIdAndCourseId" resultType="graduationproject.back.model.vo.UploadFileVo">
+
+    select file_id, file_name, author_id, create_time,course_id from files
+    where author_id = #{userId,jdbcType=VARCHAR} and course_id = #{courseId,jdbcType=INTEGER}
+  </select>
+
+  <select id="selectFilePathByFileld" resultType="Files">
+    select * from files where file_id = #{fileId,jdbcType=INTEGER}
+  </select>
+
+  <select id="getStudentFileListByUserId" resultType="graduationproject.back.model.vo.AllStudentUploadFileVo">
+    select file_id ,file_name,author_id,course_id,create_time from files
+    where author_id = #{userId,jdbcType=VARCHAR} and course_id = #{courseId,jdbcType=INTEGER}
+  </select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from files
+    where file_id = #{fileId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from files
+    where file_id = #{fileId,jdbcType=INTEGER}
+  </delete>
+
+
+  <insert id="insert" parameterType="graduationproject.back.model.entity.Files">
+    insert into files (file_id, file_name, author_id, 
+      file_path, create_time)
+    values (#{fileId,jdbcType=INTEGER}, #{fileName,jdbcType=VARCHAR}, #{authorId,jdbcType=VARCHAR}, 
+      #{filePath,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP})
+  </insert>
+
+
+
+  <insert id="insertSelective" parameterType="graduationproject.back.model.entity.Files">
+    insert into files
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="fileId != null">
+        file_id,
+      </if>
+      <if test="fileName != null">
+        file_name,
+      </if>
+      <if test="authorId != null">
+        author_id,
+      </if>
+      <if test="filePath != null">
+        file_path,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="fileId != null">
+        #{fileId,jdbcType=INTEGER},
+      </if>
+      <if test="fileName != null">
+        #{fileName,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null">
+        #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="filePath != null">
+        #{filePath,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="graduationproject.back.model.entity.Files">
+    update files
+    <set>
+      <if test="fileName != null">
+        file_name = #{fileName,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null">
+        author_id = #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="filePath != null">
+        file_path = #{filePath,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where file_id = #{fileId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="graduationproject.back.model.entity.Files">
+    update files
+    set file_name = #{fileName,jdbcType=VARCHAR},
+      author_id = #{authorId,jdbcType=VARCHAR},
+      file_path = #{filePath,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where file_id = #{fileId,jdbcType=INTEGER}
+  </update>
+</mapper>

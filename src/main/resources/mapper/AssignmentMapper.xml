@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="graduationproject.back.mapper.AssignmentMapper">
+  <resultMap id="BaseResultMap" type="graduationproject.back.model.entity.Assignment">
+    <id column="assignment_id" jdbcType="INTEGER" property="assignmentId" />
+    <result column="course_id" jdbcType="INTEGER" property="courseId" />
+    <result column="author_id" jdbcType="VARCHAR" property="authorId" />
+    <result column="assignment_name" jdbcType="VARCHAR" property="assignmentName" />
+    <result column="assignment_desc" jdbcType="VARCHAR" property="assignmentDesc" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    assignment_id, course_id, author_id, assignment_name, assignment_desc, create_time
+  </sql>
+
+
+  <insert id="createAssignment" parameterType="graduationproject.back.model.entity.Assignment">
+    insert into assignment (course_id, author_id, assignment_name, assignment_desc, create_time)
+    values
+    (#{courseId,jdbcType=INTEGER},
+    #{authorId,jdbcType=VARCHAR},
+    #{assignmentName,jdbcType=VARCHAR},
+    #{assignmentDesc,jdbcType=VARCHAR},
+    #{createTime,jdbcType=TIMESTAMP})
+  </insert>
+
+  <select id="getMyAssignment" resultType="graduationproject.back.model.vo.GetMyAssignmentVo">
+    SELECT
+		a.assignment_id,a.course_id,a.author_id,a.assignment_name,a.assignment_desc,a.create_time,c.course_name
+    FROM
+	assignment a LEFT JOIN course c on a.course_id = c.course_id
+    WHERE
+	a.author_id = #{userId,jdbcType=VARCHAR}
+  </select>
+
+    <select id="getCourseTeacherList" resultType="graduationproject.back.model.vo.AdminGetTeacherList">
+    SELECT NAME
+	,
+	user_id author_id
+FROM
+	`user`
+	INNER JOIN course ON `user`.user_id = course.author_id
+WHERE
+	account_type = '1'
+GROUP BY
+	`user`.user_id
+  </select>
+
+    <select id="getCourseListByTeacher" resultType="Course">
+    SELECT
+	*
+FROM
+	course
+WHERE
+	author_id = #{authorId,jdbcType=VARCHAR}
+  </select>
+
+    <select id="AdminGetAssignment" resultType="graduationproject.back.model.vo.GetMyAssignmentVo">
+   SELECT
+	a.assignment_id,
+	a.course_id,
+	a.author_id,
+	a.assignment_name,
+	a.assignment_desc,
+	a.create_time,
+	c.course_name
+FROM
+	assignment a
+	LEFT JOIN course c ON a.course_id = c.course_id
+GROUP BY
+	c.course_id,
+	a.assignment_id
+  </select>
+
+  <update id="modifyAssignment" parameterType="Assignment">
+    update assignment
+    <set>
+      <if test="assignmentName != null">
+        assignment_name = #{assignmentName,jdbcType=VARCHAR},
+      </if>
+      <if test="assignmentDesc != null">
+        assignment_desc = #{assignmentDesc,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where assignment_id = #{assignmentId,jdbcType=INTEGER} and author_id = #{authorId,jdbcType=VARCHAR}
+  </update>
+
+<select id="getHandedList" resultType="graduationproject.back.model.vo.GetHandedListVo">
+SELECT
+	q.user_id,
+	q.`name`,
+	d.assignment_id,
+	d.course_id,
+	c.content,
+	c.score,
+	( CASE IF ( c.content = '' OR ISNULL(c.content), 0, 1 ) WHEN 0 THEN '0' ELSE '1' END ) comment_content_status,
+	( CASE IF ( c.score = '' OR ISNULL(c.score), 0, 1 ) WHEN 0 THEN '0' ELSE '1' END ) comment_score_status
+FROM
+	`user` q
+	INNER JOIN ( SELECT f.* FROM `files` f LEFT JOIN assignment a ON f.assignment_id = a.assignment_id ) d ON q.user_id = d.author_id
+	LEFT JOIN `comment` c ON c.assignment_id = d.assignment_id
+	AND c.course_id = d.course_id
+	AND c.user_id = q.user_id
+WHERE
+	d.assignment_id = #{assignmentId,jdbcType=INTEGER}
+GROUP BY
+	q.user_id,
+	d.assignment_id
+</select>
+
+  <select id="GetUnsubmittedList" resultType="graduationproject.back.model.vo.GetUnsubmittedListVo">
+  SELECT NAME
+	,
+	user_id
+FROM
+	`user`
+WHERE
+	user_id NOT IN (
+	SELECT
+		f.author_id
+	FROM
+		`files` f
+		LEFT JOIN assignment a ON f.assignment_id = a.assignment_id
+	WHERE
+		f.assignment_id = #{assignmentId,jdbcType=INTEGER}
+	GROUP BY
+	f.author_id,
+	f.assignment_id) and account_type = 0
+</select>
+
+
+<select id="getStuFileList" resultType="Files">
+  select * from files where author_id = #{userId,jdbcType=VARCHAR} and assignment_id =#{assignmentId,jdbcType=INTEGER}
+</select>
+
+  <select id="getAssignmentByCourseId" resultType="graduationproject.back.model.vo.getAssignmentByCourseIdVo">
+SELECT w.*,( CASE IFNULL( e.file_id, 0 ) WHEN 0 THEN '0' ELSE '1' END ) submit_status
+FROM
+	(
+	SELECT
+		q.assignment_id,
+		q.course_id,
+		c.course_name,
+		q.assignment_name,
+		q.assignment_desc
+	FROM
+		(
+		SELECT
+			a.*
+		FROM
+			assignment a
+			LEFT JOIN files f ON a.assignment_id = f.assignment_id
+		GROUP BY
+			a.assignment_id,
+			a.course_id
+		) q
+		LEFT JOIN course c ON q.course_id = c.course_id
+	WHERE
+		q.course_id = #{courseId,jdbcType=INTEGER}
+	) w
+	LEFT JOIN ( SELECT * FROM files WHERE author_id = #{userId,jdbcType=VARCHAR} ) e ON w.assignment_id = e.assignment_id
+GROUP BY
+	assignment_id,
+	course_id
+  </select>
+
+    <select id="getAssignment" resultType="graduationproject.back.model.vo.getAssignmentVo">
+SELECT
+	w.*,
+	c.content,
+	c.score,
+	( CASE IFNULL( e.file_id, 0 ) WHEN 0 THEN '0' ELSE '1' END ) submit_status,
+	( CASE IFNULL( c.content, 0 ) WHEN 0 THEN '0' ELSE '1' END ) comment_content_status,
+	( CASE IFNULL( c.score, 0 ) WHEN 0 THEN '0' ELSE '1' END ) comment_score_status
+FROM
+	(
+	SELECT
+		q.assignment_id,
+		q.course_id,
+		c.course_name,
+		q.assignment_name,
+		q.assignment_desc
+	FROM
+		(
+		SELECT
+			a.*
+		FROM
+			assignment a
+			LEFT JOIN files f ON a.assignment_id = f.assignment_id
+		GROUP BY
+			a.assignment_id,
+			a.course_id
+		) q
+		LEFT JOIN course c ON q.course_id = c.course_id
+	WHERE
+		q.course_id IN ( SELECT course_id FROM elective WHERE user_id = #{userId,jdbcType=VARCHAR} )
+	) w
+	LEFT JOIN ( SELECT * FROM files WHERE author_id = #{userId,jdbcType=VARCHAR}) e ON w.assignment_id = e.assignment_id
+	LEFT JOIN `comment` c ON c.assignment_id = e.assignment_id
+	AND c.course_id = e.course_id
+	AND c.user_id = #{userId,jdbcType=VARCHAR}
+GROUP BY
+	w.assignment_id,
+	w.course_id
+  </select>
+
+    <select id="getSubmitAssignment" resultType="graduationproject.back.model.vo.getSubmitAssignmentVo">
+SELECT
+	w.*,
+	c.content,
+	c.score,
+	( CASE IFNULL( e.file_id, 0 ) WHEN 0 THEN '0' ELSE '1' END ) submit_status,
+	( CASE IFNULL( c.content, 0 ) WHEN 0 THEN '0' ELSE '1' END ) comment_content_status,
+	( CASE IFNULL( c.score, 0 ) WHEN 0 THEN '0' ELSE '1' END ) comment_score_status
+FROM
+	(
+	SELECT
+		q.assignment_id,
+		q.course_id,
+		c.course_name,
+		q.assignment_name,
+		q.assignment_desc
+	FROM
+		(
+		SELECT
+			a.*
+		FROM
+			assignment a
+			LEFT JOIN files f ON a.assignment_id = f.assignment_id
+		GROUP BY
+			a.assignment_id,
+			a.course_id
+		) q
+		LEFT JOIN course c ON q.course_id = c.course_id
+	WHERE
+		q.course_id IN ( SELECT course_id FROM elective WHERE user_id = #{userId,jdbcType=VARCHAR} )
+	) w
+	LEFT JOIN ( SELECT * FROM files WHERE author_id = #{userId,jdbcType=VARCHAR}) e ON w.assignment_id = e.assignment_id
+	LEFT JOIN `comment` c ON c.assignment_id = e.assignment_id
+	AND c.course_id = e.course_id
+	AND c.user_id = #{userId,jdbcType=VARCHAR}
+WHERE
+	( CASE IFNULL( e.file_id, 0 ) WHEN 0 THEN '0' ELSE '1' END ) = 1
+GROUP BY
+	w.assignment_id,
+	w.course_id
+
+    </select>
+
+    <delete id="deleteWork">
+DELETE assignment,
+files,
+`comment`
+FROM
+	assignment
+	LEFT JOIN files ON assignment.assignment_id = files.assignment_id
+	LEFT JOIN `comment` ON `comment`.assignment_id = assignment.assignment_id
+WHERE
+	assignment.assignment_id = #{assignmentId,jdbcType=INTEGER}
+	AND assignment.author_id = #{userId,jdbcType=VARCHAR}
+  </delete>
+
+
+
+
+
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from assignment
+    where assignment_id = #{assignmentId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from assignment
+    where assignment_id = #{assignmentId,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="graduationproject.back.model.entity.Assignment">
+    insert into assignment (assignment_id, course_id, author_id, 
+      assignment_name, assignment_desc, create_time
+      )
+    values (#{assignmentId,jdbcType=INTEGER}, #{courseId,jdbcType=INTEGER}, #{authorId,jdbcType=VARCHAR}, 
+      #{assignmentName,jdbcType=VARCHAR}, #{assignmentDesc,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="graduationproject.back.model.entity.Assignment">
+    insert into assignment
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="assignmentId != null">
+        assignment_id,
+      </if>
+      <if test="courseId != null">
+        course_id,
+      </if>
+      <if test="authorId != null">
+        author_id,
+      </if>
+      <if test="assignmentName != null">
+        assignment_name,
+      </if>
+      <if test="assignmentDesc != null">
+        assignment_desc,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="assignmentId != null">
+        #{assignmentId,jdbcType=INTEGER},
+      </if>
+      <if test="courseId != null">
+        #{courseId,jdbcType=INTEGER},
+      </if>
+      <if test="authorId != null">
+        #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="assignmentName != null">
+        #{assignmentName,jdbcType=VARCHAR},
+      </if>
+      <if test="assignmentDesc != null">
+        #{assignmentDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="graduationproject.back.model.entity.Assignment">
+    update assignment
+    <set>
+      <if test="courseId != null">
+        course_id = #{courseId,jdbcType=INTEGER},
+      </if>
+      <if test="authorId != null">
+        author_id = #{authorId,jdbcType=VARCHAR},
+      </if>
+      <if test="assignmentName != null">
+        assignment_name = #{assignmentName,jdbcType=VARCHAR},
+      </if>
+      <if test="assignmentDesc != null">
+        assignment_desc = #{assignmentDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where assignment_id = #{assignmentId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="graduationproject.back.model.entity.Assignment">
+    update assignment
+    set course_id = #{courseId,jdbcType=INTEGER},
+      author_id = #{authorId,jdbcType=VARCHAR},
+      assignment_name = #{assignmentName,jdbcType=VARCHAR},
+      assignment_desc = #{assignmentDesc,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where assignment_id = #{assignmentId,jdbcType=INTEGER}
+  </update>
+</mapper>
